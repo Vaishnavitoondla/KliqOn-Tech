@@ -242,6 +242,14 @@ export function CTASection() {
                 Schedule a Call
                 <ArrowRight className="w-5 h-5" />
               </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05, backgroundColor: "rgba(243, 243, 243, 0.15)" }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate("/portfolio")}
+                className="px-8 py-4 border-2 border-[#F3F3F3] text-[#F3F3F3] rounded-lg hover:bg-[#F3F3F3]/10 transition-colors"
+              >
+                Portfolio
+              </motion.button>
             </motion.div>
           </div>
         </motion.div>
