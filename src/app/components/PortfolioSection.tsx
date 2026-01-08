@@ -1,56 +1,63 @@
-import { useEffect, useState } from "react";
-import { motion } from "motion/react";
+import { useEffect, useState, useRef, useLayoutEffect } from "react";
+import { motion, useInView} from "motion/react";
+import {PortfolioHeroSection} from './PortfolioHeroSection';
+import {PortfolioCard} from './PortfolioCard';
 import { portfolioData } from "../data/portfolioData";
 import type { PortfolioItem } from "../data/portfolioData";
-import { useLayoutEffect } from "react";
-
-import "../../styles/portfolio.css"
+import "../../styles/portfolio.css";
 
 /* ---------- Animated Stat Component ---------- */
+
 function Stat({ value, label }: { value: number; label: string }) {
- const [count, setCount] = useState(0);
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true });
 
-useEffect(() => {
-  let start = 0;
-  const duration = 2800; 
-  const frameRate = 16; 
-  const totalSteps = duration / frameRate;
-  const step = value / totalSteps;
+  useEffect(() => {
+    if (!isInView) return;
 
-  const counter = setInterval(() => {
-    start += step;
-    if (start >= value) {
-      setCount(value);
-      clearInterval(counter);
-    } else {
-      setCount(Math.floor(start));
-    }
-  }, frameRate);
+    let start = 0;
+    const duration = 2000;
+    const stepTime = 20;
+    const steps = duration / stepTime;
+    const increment = value / steps;
 
-  return () => clearInterval(counter);
-}, [value]);
+    const counter = setInterval(() => {
+      start += increment;
+      if (start >= value) {
+        setCount(value);
+        clearInterval(counter);
+      } else {
+        setCount(Math.floor(start));
+      }
+    }, stepTime);
 
-
+    return () => clearInterval(counter);
+  }, [isInView, value]);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 25 }}
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
       className="stat-card"
     >
-      <h3>{count}+</h3>
+      <h3><span className="stat-line">{count} </span> + </h3>
       <p>{label}</p>
     </motion.div>
   );
 }
 
+
 /* ---------- Main Component ---------- */
 export function PortfolioSection() {
   const [active, setActive] = useState("All");
-  
 
-  const categories = ["All", "Web", "E-Commerce", "UI/UX", "Enterprise"];
+  const categories = [
+  "All",
+  ...Array.from(new Set(portfolioData.map(item => item.category))),
+];
 
   const filteredData =
     active === "All"
@@ -58,51 +65,25 @@ export function PortfolioSection() {
       : portfolioData.filter(
           (item: PortfolioItem) => item.category === active
         );
-    
- useLayoutEffect(() => {
-     window.scrollTo({ top: 0, behavior: "auto" });
-   }, []);
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, []);
 
   return (
     <section className="portfolio-section">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="portfolio-header"
-      >
-        <h2>
-          Our <span>Portfolio</span>
-        </h2>
-        <p>
-          A glimpse of projects we have delivered for our clients across
-          industries.
-        </p>
-      </motion.div>
-
-      {/* Hero */}
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="portfolio-hero"
-      >
-        <h1>
-          Building Digital <span>Experiences</span>
-        </h1>
-        <p>
-          From static websites to full-scale e-commerce and digital growth
-          solutions, we help brands grow online.
-        </p>
-      </motion.div>
+        <PortfolioHeroSection />
 
       {/* Stats */}
-      <div className="portfolio-stats">
-        <Stat value={20} label="Projects Delivered" />
-        <Stat value={10} label="Happy Clients" />
-        <Stat value={5} label="Industries Served" />
-      </div>
+     <div className="portfolio-stats-wrapper">
+  <div className="portfolio-stats">
+    <Stat value={30} label="Projects Delivered" />
+    <Stat value={40} label="Happy Clients" />
+    <Stat value={10} label="Industries Served" />
+  </div>
+</div>
+
 
       {/* Filters */}
       <div className="portfolio-filters">
@@ -118,37 +99,41 @@ export function PortfolioSection() {
       </div>
 
       {/* Grid */}
-      <div className="portfolio-grid">
+          <div className="portfolio-grid bg-gradient-to-br from-[#0E1322] to-[#0023E8]/20 rounded-3xl p-4 md:p-6 lg:p-8 border border-[#0023E8]/30 shadow-2xl">
         {filteredData.map((item: PortfolioItem, index: number) => (
-          <motion.div
-            key={item.id}
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.12 }}
-            className="portfolio-card"
-          >
-            <h3>{item.client}</h3>
-            <span className="category">{item.category}</span>
-
-            <p className="description">{item.description}</p>
-
-            <div className="services">
-              {item.services.map((service: string, i: number) => (
-                <span key={i}>{service}</span>
-              ))}
-            </div>
-
-            <a
-              href={item.link}
-              target="_blank"
-              rel="noreferrer"
-              className="visit-btn"
-            >
-              Visit Project →
-            </a>
-          </motion.div>
+          <PortfolioCard key={item.id} item={item} index={index} />
         ))}
       </div>
+
+      <div className="portfolio-extra">
+  <div className="portfolio-extra-content">
+    <h2>
+      How We Build <span>Scalable Digital Products</span>
+    </h2>
+
+    <p>
+      We follow a structured, transparent, and technology-driven approach
+      to deliver reliable digital solutions for startups and enterprises.
+    </p>
+
+    <ul>
+      <li>Requirement analysis & solution planning</li>
+      <li>UI/UX focused design approach</li>
+      <li>Scalable and secure development</li>
+      <li>Testing, deployment & ongoing support</li>
+    </ul>
+  </div>
+
+<div className="portfolio-extra-image">
+  <div className="image-bg-rotate"></div>
+  <img
+    src="https://cdnwe1.ltex.in/assets/img/home/tech.webp"
+    alt="Technology and Engineering"
+  />
+</div>
+
+</div>
+
     </section>
   );
 }
